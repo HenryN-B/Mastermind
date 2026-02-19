@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h1>Mastermind</h1>
+
+<button id="create-button" type="button">Create</button>
+<button id="join-button" type="button">Join</button>
+
+<input
+    id="room-code"
+    placeholder="Room Code"
+    style="display: none"
+/>
+
+
+<script>
+    const socket = io();
+
+    function getClientId() {
+    let id = sessionStorage.getItem("client_id");
+    if (!id) {
+        if (crypto && crypto.randomUUID) {
+        id = crypto.randomUUID();
+        } else {
+        // Fallback for older browsers (Safari)
+        id = ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+            (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+        );
+        }
+        sessionStorage.setItem("client_id", id);
+    }
+    return id;
+    }
+
+    const clientId = getClientId();
+
+
+    const createBtn = document.getElementById("create-button");
+    const joinBtn = document.getElementById("join-button");
+    const roomCodeInput = document.getElementById("room-code");
+
+
+
+    function join_button_event() {
+        createBtn.style.display = "none";
+        joinBtn.style.display = "none";
+        roomCodeInput.style.display = "inline-block";
+        roomCodeInput.focus();
+    }
+
+    function create_button_event() {
+        console.log("click")
+        socket.emit("create_room", {client_id: clientId});
+    }
+
+
+    joinBtn.addEventListener("click", join_button_event);
+    createBtn.addEventListener("click", create_button_event);
+
+
+    roomCodeInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            const code = roomCodeInput.value.trim();
+            socket.emit("join_room", { room: code, client_id: clientId });
+        }
+    });
+
+    socket.on("room_created", (data) => {
+        window.location.href = data.url;
+    });    
+
+    socket.on("join_success", (data) => {
+        window.location.href = data.url;
+    });
+
+    socket.on("join_failed", (data) => {
+        alert(data.error);
+    });
+</script>
+
+{% endblock %}

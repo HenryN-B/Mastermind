@@ -1,0 +1,219 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.content {
+  height: 100svh;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr; 
+  align-items: center;
+  background: #204422;
+}
+
+.color-holder {
+  width: 15%;
+  height: auto;
+  border: solid 5px;
+  border-image-source: url("../assets/img/wood.png");
+  justify-self: left;
+  display: flex;
+  justify-content: space-evenly;
+  flex-direction: column;
+}
+
+.color {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 64px;
+  border: solid 5px rgb(13, 93, 38);
+
+}
+
+.unselect {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 64px;
+  border: solid 5px rgb(13, 93, 38);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.color img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+
+}
+
+.game-shell {
+    justify-self: center;
+    width: 80%;
+    background: #6d6b6b;
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    background-image: url("../assets/img/wood.png");
+    background-size: 100% auto;
+}
+
+.header {
+  flex: 0 0 auto;
+  text-align: center;
+  color: white;
+  font-weight: bold;
+  letter-spacing: 2px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.board {
+  
+  flex: 1 1 auto;                
+  display: flex;
+  flex-direction: column;
+  min-height: 0;      
+  border: solid #2a1b07;
+  border-radius: 5px;            
+}
+
+.row {
+  display: flex;
+  align-items:center;
+  justify-content: space-evenly;
+  min-height: 0;
+  height: 8svh;
+  border-top: 3px solid #2a1b07;
+  
+}
+
+.row:first-child {    
+    border-top: none;
+}
+
+.guess {
+    display: flex;
+    flex: 1 1 auto;
+    justify-content: space-evenly;
+    min-width: 0;
+}
+
+.feedback {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+}
+
+:root {
+--peg: clamp(22px, 4.5svh, 54px);
+--key: clamp(12px, 3svh, 26px);
+}
+
+.peg, .key {
+  display: grid;
+  place-items: center; 
+  border-radius: 50%;
+  user-select: none;
+}
+
+.peg {
+  width: var(--peg);
+  height: var(--peg);
+  background: rgba(0,0,0,0.15);
+}
+
+.peg img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.peg.filled img {
+  transform: scale(1.25);
+}
+
+.key {
+  width: var(--key);
+  height: var(--key);
+  border: 1px solid #2a1b07;
+  background: rgba(255,255,255,0.15);
+}
+
+.key img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+
+body.custom-cursor {
+  cursor: none;
+}
+
+.floating-peg {
+  position: fixed;
+  width: 32px;
+  height: 32px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+}
+
+.key-floating-peg {
+  width: 16px;
+  height: 16px;
+}
+
+.hidden_peg {
+  display: none;
+}
+
+.feedback-pegs-holder {
+  width: 15%;
+  height: auto;
+  border: solid 5px;
+  border-image-source: url("../assets/img/wood.png");
+  justify-self: left;
+  display: flex;
+  justify-content: space-evenly;
+  flex-direction: column;
+}
+
+.feedback-pegs {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 64px;
+    border: solid 5px rgb(13, 93, 38);
+}
+
+.feedback-pegs img{
+  width: 20%;
+  height: 20%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+

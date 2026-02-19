@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="feedback-pegs-holder">
+    {%for num in range(2)%}
+    <div class = "feedback-pegs" id = "feedback-{{ num }}">
+      <img src="../static/assets/img/feedback-{{num}}.png">
+    </div>
+    {% endfor %}
+    <div class = "unselect" id="unselect-feedback">
+      Unselect 
+  </div>
+
+</div>
+
+<div class="game-shell">
+  <div class="header">MASTERMIND</div>
+  <div class="board">
+
+    {% for row in range(10) %}
+    <div class="row">
+
+      <div class="guess">
+        {% for col in range(4) %}
+        <div class="peg" id="peg-r{{ row }}-c{{ col }}">
+            <img src="../static/assets/img/peg_hole.png" alt="peg_hole"> 
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="feedback">
+        {% for num in range(4) %}
+        <div class="key" id="key-r{{ row }}-n{{ num }}">
+            <img src="../static/assets/img/peg_hole.png" alt="peg_hole"> 
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+
+<div class="color-holder">
+  {%for num in range(8)%}
+  <div class = "color" id = "color-{{ num }}">
+    <img src="../static/assets/img/color-{{num}}.png">
+  </div>
+  {% endfor %}
+  <div class = "unselect" id="unselect-color">
+    Unselect
+  </div>
+</div>
+
+<script type="module" src="../static/assets/js/game_script.js"></script>
+
+
+{% endblock %}
