@@ -1,16 +1,12 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="feedback-pegs-holder">
-    {%for num in range(2)%}
-    <div class = "feedback-pegs" id = "feedback-{{ num }}">
-      <img src="../static/assets/img/feedback-{{num}}.png">
+<div class="chat-panel" id="chat-panel">
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="Type a message..." maxlength="200">
+        <button id="chat-send-button">Send</button>
     </div>
-    {% endfor %}
-    <div class = "unselect" id="unselect-feedback">
-      Unselect 
-  </div>
-
 </div>
 
 <div class="game-shell">
@@ -18,7 +14,7 @@
   <div class="board">
 
     {% for row in range(10) %}
-    <div class="row">
+    <div class="row" id="row-{{ row }}">
 
       <div class="guess">
         {% for col in range(4) %}
@@ -38,20 +34,67 @@
 
     </div>
     {% endfor %}
-
+  </div>
+    <div class="turn-controls" id="turn-controls">
+      <button style = "display: none" id="submit-button">Submit</button>
   </div>
 </div>
 
-<div class="color-holder">
-  {%for num in range(8)%}
-  <div class = "color" id = "color-{{ num }}">
-    <img src="../static/assets/img/color-{{num}}.png">
+<div id = "peg-holder"  style="visibility: hidden;">
+  <div class="color-holder" id = "color-holder" style = "display: none;">
+    {%for num in range(8)%}
+    <div class = "color" id = "color-{{ num }}">
+      <img src="../static/assets/img/color-{{num}}.png">
+    </div>
+    {% endfor %}
+    <div class = "unselect" id="unselect-color">
+      <img src="../static/assets/img/unselect-peg.png">
+    </div>
   </div>
-  {% endfor %}
-  <div class = "unselect" id="unselect-color">
-    Unselect
+
+  <div class="feedback-pegs-holder" id ="feedback-holder" style = "display: none;">
+      {%for num in range(2)%}
+      <div class = "feedback-pegs" id = "feedback-{{ num }}">
+        <img src="../static/assets/img/feedback-{{num}}.png">
+      </div>
+      {% endfor %}
+      <div class = "unselect" id="unselect-feedback">
+        <img src="../static/assets/img/unselect-peg.png">
+      </div>
   </div>
 </div>
+
+
+<div class = "code-giver" id = "code-giver-div" style="visibility: hidden;">
+  <div class="code-div-holder" id="code">
+      <div class="code-header">
+          <span class="code-label">Code</span>
+          <button class="code-hide-button" id="code-hide-button">Hide</button>
+      </div>
+
+      <div class="code-holder" id="code-holder">
+          {% for col in range(4) %}
+          <div class="peg code-peg" id="code-peg-col{{ col }}">
+              <img src="../static/assets/img/peg_hole.png" alt="peg_hole">
+          </div>
+          {% endfor %}
+      </div>
+    <div class="code-footer">
+      <button style="display:none" class="code-confirm-button" id="code-confirm-button">Confirm</button>
+    </div>
+  </div>
+</div>
+
+    <link
+      rel="stylesheet"
+      href="{{url_for('static',filename='css/game-style.css')}}"
+    />
+
+
+
+<script>
+  const game_data = {{ data | tojson | safe }};
+</script> 
 
 <script type="module" src="../static/assets/js/game_script.js"></script>
 

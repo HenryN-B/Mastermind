@@ -1,0 +1,478 @@
+/*
+ * Copyright (C) 2026  <your name>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+:root {
+    --felt: #1b3a1d;
+    --wood-dark: #2a1b07;
+    --wood-mid: #6b4423;
+    --parchment: #e8dcc3;
+    --ink: #2a1b07;
+    --peg-red: #c23b3b;
+}
+
+.content {
+  height: 100svh;
+  display: grid;
+  grid-template-columns: 2fr 2fr 0.5fr 1.5fr; 
+  align-items: center;
+  background: #204422;
+}
+
+.color-holder {
+  width: 80%;
+  height: auto;
+  justify-self: left;
+  align-items: center;
+  display: flex;
+  justify-content: space-evenly;
+  flex-direction: column;
+  background-image: url("../assets/img/wood.png");
+  border-radius: 25px;
+  box-shadow: inset 0 3px 6px rgba(0,0,0,0.5); 
+}
+
+.color {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 60%;
+    height: clamp(20px, 3.5vw, 64px);
+    background-color: var(--wood-dark);
+    box-shadow: inset 0 3px 6px rgba(0,0,0,0.5); 
+    border-radius: 50px;
+    margin: 0.5vw 0;
+}
+.unselect {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80%;
+  height: 64px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.unselect img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.color img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+
+}
+
+
+.feedback-pegs-holder {
+  width: 100%;
+  height: auto;
+  justify-self: left;
+  display: flex;
+  justify-content: space-evenly;
+  flex-direction: column;
+}
+
+.feedback-pegs {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 80%;
+    height: 64px;
+    border: solid 5px;
+    border-image-slice: 5;
+    border-image-source: url("../assets/img/wood.png");
+    background-color: #1a3a1c;
+    box-shadow: inset 0 3px 6px rgba(0,0,0,0.5);
+}
+
+.feedback-pegs img{
+  width: 20%;
+  height: 20%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+
+.game-shell {
+    justify-self: center;
+    width: 80%;
+    background: #6d6b6b;
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    background-image: url("../assets/img/wood.png");
+    background-size: 100% auto;
+}
+
+.header {
+  flex: 0 0 auto;
+  text-align: center;
+  color: white;
+  font-weight: bold;
+  letter-spacing: 2px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.board {
+  
+  flex: 1 1 auto;                
+  display: flex;
+  flex-direction: column;
+  min-height: 0;      
+  border: solid #2a1b07;
+  border-radius: 5px;            
+}
+
+.row {
+  display: flex;
+  align-items:center;
+  justify-content: space-evenly;
+  min-height: 0;
+  height: 8svh;
+  border-top: 3px solid #2a1b07;
+  
+}
+
+.row:first-child {    
+    border-top: none;
+}
+
+.guess {
+    display: flex;
+    flex: 1 1 auto;
+    justify-content: space-evenly;
+    min-width: 0;
+}
+
+.feedback {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+}
+
+:root {
+--peg: clamp(22px, 4.5svh, 54px);
+--key: clamp(12px, 3svh, 26px);
+}
+
+.peg, .key {
+  display: grid;
+  place-items: center; 
+  border-radius: 50%;
+  user-select: none;
+}
+
+.peg {
+  width: var(--peg);
+  height: var(--peg);
+  background: rgba(0,0,0,0.15);
+}
+
+.peg img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.peg.filled img {
+  transform: scale(1.25);
+}
+
+.key {
+  width: var(--key);
+  height: var(--key);
+  border: 1px solid #2a1b07;
+  background: rgba(255,255,255,0.15);
+}
+
+.key img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+
+body.custom-cursor {
+  cursor: none;
+}
+
+.floating-peg {
+  position: fixed;
+  width: 32px;
+  height: 32px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+}
+
+.key-floating-peg {
+  width: 16px;
+  height: 16px;
+}
+
+.hidden_peg {
+  display: none;
+}
+
+
+
+.code-giver {
+  display: flex;
+  flex-direction: row;
+}
+
+.code-div-holder {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+
+}
+
+.code-holder {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border: 5px solid #6b4423; /* solid wood-brown tone instead of the texture image */
+    border-radius: 40px;
+    background-color: #1a3a1c;
+    box-shadow: inset 0 3px 6px rgba(0,0,0,0.5);
+}
+
+
+
+.code-div-holder {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.code-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px 6px;
+}
+
+.code-label {
+    color: white;
+    font-weight: bold;
+    letter-spacing: 1px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.code-hide-button {
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: none;
+    background: #2a1b07;
+    color: white;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.code-hide-button:hover {
+    filter: brightness(1.15);
+}
+
+.code-holder.hidden .peg img {
+    visibility: hidden;
+}
+
+.code-holder.hidden {
+    position: relative;
+}
+
+.code-holder.hidden::after {
+    content: "Code hidden";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    pointer-events: none;
+}
+
+.code-peg {
+  margin: 10px;
+}
+
+.code-footer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 6px;
+
+}
+
+.code-confirm-button {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #2a1b07;
+  color: white;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.code-confirm-button:hover {
+    filter: brightness(1.15);
+}
+
+
+
+
+
+
+
+.current-row {
+    background-color: rgba(255, 255, 255, 0.15);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.6);
+    animation: row-activate 0.4s ease-out;
+}
+
+@keyframes row-activate {
+    from { background-color: rgba(255, 215, 0, 0.4); }
+    to { background-color: rgba(255, 255, 255, 0.15); }
+}
+
+.turn-controls {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    padding: 12px 0 4px;
+}
+
+#submit-button {
+    padding: 10px 28px;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    background: #2a1b07;
+    color: white;
+}
+
+#submit-button:disabled {
+    background: rgba(42, 27, 7, 0.4);
+    cursor: not-allowed;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+
+
+.chat-panel {
+    width: 100%;
+    height: 70vh;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.2);
+    border: solid 5px;
+    border-image-source: url("../assets/img/wood.png");
+    border-image-slice: 5;
+    justify-self: left;
+}
+
+.chat-messages {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 8px;
+    color: white;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.chat-message {
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    word-wrap: break-word;
+}
+
+.chat-message.own {
+    background: rgba(102, 78, 78, 0.4);
+    align-self: flex-end;
+}
+
+.chat-message.server {
+    font-style: italic;
+    color: #ffd966;
+    background: transparent;
+    text-align: center;
+    align-self: center;
+}
+
+.chat-input-row {
+    flex: 0 0 auto;
+    display: flex;
+    border-top: 2px solid #2a1b07;
+}
+
+#chat-input {
+    flex: 1 1 auto;
+    padding: 8px;
+    border: none;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+#chat-send-button {
+    padding: 8px 16px;
+    border: none;
+    background: #2a1b07;
+    color: white;
+    cursor: pointer;
+}

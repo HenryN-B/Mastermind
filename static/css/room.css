@@ -1,0 +1,140 @@
+/*
+ * Copyright (C) 2026  <your name>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+:root {
+    --felt: #1b3a1d;
+    --wood-dark: #2a1b07;
+    --wood-mid: #6b4423;
+    --parchment: #e8dcc3;
+    --ink: #2a1b07;
+    --peg-red: #c23b3b;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.table {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--felt);
+    background-image: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05), transparent 60%);
+}
+
+.game-box {
+    width: min(420px, 90vw);
+    padding: 40px 32px;
+    text-align: center;
+    background: var(--parchment);
+    border: solid 10px;
+    border-image-slice: 10;
+    border-image-source: url("../assets/img/wood.png");
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+}
+
+.title {
+    margin: 0 0 6px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2.6rem;
+    color: var(--ink);
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.3), -1px -1px 0 rgba(0,0,0,0.15);
+}
+
+.tagline {
+    margin: 0 0 28px;
+    color: var(--wood-mid);
+    font-size: 0.95rem;
+}
+
+.room-code-plaque {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding: 14px 20px;
+    background: #fdfaf3;
+    border: 2px solid var(--wood-mid);
+    border-radius: 6px;
+}
+
+.room-code-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: var(--ink);
+}
+
+.copy-button {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border: none;
+    border-radius: 5px;
+    background: var(--wood-dark);
+    color: #f4efe3;
+    cursor: pointer;
+}
+
+.copy-button:hover {
+    filter: brightness(1.15);
+}
+
+.player-status {
+    margin: 0 0 28px;
+    color: var(--wood-mid);
+    font-size: 0.95rem;
+}
+
+.tile-button {
+    width: 100%;
+    padding: 16px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #f4efe3;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25);
+    transition: transform 0.08s ease, filter 0.15s ease;
+}
+
+.tile-button.primary {
+    background: var(--peg-red);
+}
+
+.tile-button:hover:not(:disabled) {
+    filter: brightness(1.15);
+}
+
+.tile-button:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25);
+}
+
+.tile-button:disabled {
+    background: rgba(42, 27, 7, 0.35);
+    cursor: not-allowed;
+}

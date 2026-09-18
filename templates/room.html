@@ -1,45 +1,31 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<h1>Mastermind Room</h1>
-Code = {{ data.code }}
-<br>
-<p>Your player number: <span id="player-count">?</span></p>
+<div class="table">
+    <div class="game-box">
+        <h1 class="title">Mastermind</h1>
+        <p class="tagline" id="status-text">Waiting for players&hellip;</p>
 
+        <div class="room-code-plaque">
+            <span class="room-code-value" id="room-code-value">{{ data.code }}</span>
+            {# <button class="copy-button" id="copy-button" type="button" title="Copy room code">Copy</button> #}
+        </div>
+
+        <p class="player-status">
+            <span id="player-count">?</span> of 2 players here
+        </p>
+
+        <button class="tile-button primary" id="start" type="button" style="display: none;" disabled>
+            Start game
+        </button>
+    </div>
+</div>
+
+<link rel="stylesheet" href="{{url_for('static',filename='css/room.css')}}"/>
 
 <script>
-    const socket = io();
-    const roomCode = "{{ data.code }}";
-    function getClientId() {
-    let id = sessionStorage.getItem("client_id");
-    if (!id) {
-        if (crypto && crypto.randomUUID) {
-        id = crypto.randomUUID();
-        } else {
-        // Fallback for older browsers (Safari)
-        id = ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
-            (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-        );
-        }
-        sessionStorage.setItem("client_id", id);
-    }
-    return id;
-    }
-
-    const clientId = getClientId();
-
-    // try to join automatically on page load
-    socket.emit("join_room", { room: roomCode, client_id: clientId});
-
-    socket.on("join_failed", (data) => {
-    alert(data.error);
-    window.location.href = "/";
-    });
-
-    socket.on("room_update", (data) => {
-        console.log(data.count)
-        document.getElementById("player-count").textContent = data.count;
-    });
+    const game_data = {{ data | tojson | safe }};
 </script>
+<script type="module" src="../static/assets/js/room.js"></script>
 
 {% endblock %}
