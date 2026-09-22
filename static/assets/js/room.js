@@ -15,10 +15,22 @@
 
 import { getClientId } from "./helper.js";
 
+if (game_data.started) {
+    window.location.replace(`/game?room=${game_data.code}`);
+}
+
+window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+
 const socket = io();
 const clientId = getClientId();
 const roomCode = game_data.code;
 const isHost = clientId == game_data.host;
+
+
 
 document.cookie = `client_id=${clientId}; path=/`;
 
@@ -26,24 +38,33 @@ const startButton = document.getElementById("start");
 const statusText = document.getElementById("status-text");
 const playerCountEl = document.getElementById("player-count");
 const copyButton = document.getElementById("copy-button");
+const codeGiverCheckbox = document.getElementById("code-giver-checkbox");
+const roleToggle = document.getElementById("role-toggle");
+const backButton = document.getElementById("back-button");
 
 if (isHost) {
     startButton.style.display = "inline-block";
+    roleToggle.style.display = "inline-block";
+    copyButton.style.display = "inline-block";
     startButton.addEventListener("click", () => {
-        socket.emit("start_room", { client_id: clientId, room: roomCode });
+        socket.emit("start_room", {
+            client_id: clientId,
+            room: roomCode,
+            host_is_code_giver: codeGiverCheckbox.checked
+        });
     });
 }
 
-// copyButton.addEventListener("click", async () => {
-//     try {
-//         await navigator.clipboard.writeText(roomCode);
-//         copyButton.textContent = "Copied!";
-//         setTimeout(() => { copyButton.textContent = "Copy"; }, 1500);
-//     } catch (err) {
-//         copyButton.textContent = "Copy failed";
-//         setTimeout(() => { copyButton.textContent = "Copy"; }, 1500);
-//     }
-// });
+copyButton.addEventListener("click", async () => {
+    try {
+        await navigator.clipboard.writeText(roomCode);
+        copyButton.textContent = "Copied!";
+        setTimeout(() => { copyButton.textContent = "Copy"; }, 1500);
+    } catch (err) {
+        copyButton.textContent = "Copy failed";
+        setTimeout(() => { copyButton.textContent = "Copy"; }, 1500);
+    }
+});
 
 function updateStatus(count) {
     playerCountEl.textContent = count;
@@ -80,4 +101,19 @@ socket.on("start_failed", (data) => {
 
 socket.on("game_started", (data) => {
     window.location.href = `/game?room=${data.room}`;
+});
+
+socket.on("host_changed", (data) => {
+    console.log("here")
+    window.location.reload();
+});
+
+
+backButton.addEventListener("click", () => {
+    console.log("here")
+socket.emit("room_back_button", { room: roomCode, client_id: clientId }, (response) => {
+    if (response && response.url) {
+        window.location.href = response.url;
+    }
+});
 });

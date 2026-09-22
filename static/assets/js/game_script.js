@@ -19,8 +19,14 @@ import { getClientId } from "./helper.js";
 
 const socket = io();
 
+window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
 
-  
+
+
 // Preload all colors
 const colors = new Array(8);
 for (let i = 0; i<8; i++) {
@@ -56,6 +62,8 @@ const feedback_holder = document.getElementById("feedback-holder");
 const codePegs = document.getElementsByClassName("code-peg");
 const codeHideButton = document.getElementById("code-hide-button");
 const codeHolder = document.getElementById("code-holder");
+const codeGiverDiv = document.getElementById("code-giver-div");
+const codeConfirmButton = document.getElementById("code-confirm-button");
 let codeIsHidden = false;
 
 
@@ -71,7 +79,7 @@ Array.from(all_pegs).forEach(function(hole) {
         if (!player.isColorSelected() &&
             peg.classList.contains("filled") &&
             !player.getRole() &&
-            row.classList.contains("current-row"))     
+            row.classList.contains("current-row") & !game.getCodeTurn())     
         {
 
             const colorValue = Number(peg.querySelector('img').src.match(/color-(\d+)/)[1]);
@@ -150,7 +158,7 @@ Array.from(all_keyholes).forEach(function(hole) {
 
         if (row.classList.contains("current-row") && game.getCodeTurn()) {
 
-            if (!player.isColorSelected() && key.classList.contains("filled")) {
+            if (!player.isFeedbackSelected() && key.classList.contains("filled")) {
                 const feedback = Number(key.querySelector('img').src.match(/feedback-(\d+)/)[1]);
                 player.selectColor(feedback_pegs[feedback].cloneNode(true), feedback, true, event.clientX, event.clientY);
 
@@ -192,7 +200,7 @@ unselect_feedback.addEventListener("click", function(event) {
 // Adding event listeners to the color select.
 Array.from(all_colors).forEach(color => {
     color.addEventListener("click", function(event) {
-        const colorValue = Number(event.currentTarget.id.split('-')[1]); // "color-3" -> 3
+        const colorValue = Number(event.currentTarget.id.split('-')[1]); 
         player.selectColor(colors[colorValue].cloneNode(true), colorValue, false, event.clientX, event.clientY);
     });
 });
@@ -200,7 +208,7 @@ Array.from(all_colors).forEach(color => {
 // Adding event listeners to the feedback select.
 Array.from(all_feedback_pegs).forEach(feedback => {
     feedback.addEventListener("click", function(event) {
-        const feedbackValue = Number(event.currentTarget.id.split('-')[1]); // "feedback-1" -> 1
+        const feedbackValue = Number(event.currentTarget.id.split('-')[1]); 
         player.selectColor(feedback_pegs[feedbackValue].cloneNode(true), feedbackValue, true, event.clientX, event.clientY);
     });
 });
@@ -213,18 +221,18 @@ document.addEventListener("mousemove", function(event) {
 // Adding event listener to submit button.
 submitButton.addEventListener("click", (event) => {
     if (game.getCodeTurn()) {
-        // Code giver is submitting feedback for the current row
         const keyRow = game.getKeyBoard()[game.getCurrentRow()];
         socket.emit("submit_feedback", {
             room: game.getRoom(),
-            keyRow: keyRow
+            keyRow: keyRow,
+            client_id: player.getClientID()
         });
     } else {
-        // Guesser is submitting their guess for the current row
         const guess = game.getBoard()[game.getCurrentRow()];
         socket.emit("submit_guess", {
             room: game.getRoom(),
-            guess: guess
+            guess: guess,
+            client_id: player.getClientID() 
         });
     }
     player.unSelectColor();
@@ -256,7 +264,7 @@ function sendChatMessage() {
     chatInput.value = "";
 }
 
-chatSendButton.addEventListener("click", sendChatMessage());
+chatSendButton.addEventListener("click", sendChatMessage);
 chatInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
         sendChatMessage()};
@@ -267,8 +275,8 @@ socket.on("chat_message", (data) => {
     bubble.classList.add("chat-message");
 
     if (data.client_id === null) {
-        bubble.classList.add("server");
-        bubble.textContent = data.text;
+        sendServerMessage(data.text, bubble);
+        return;
     } else {
         if (data.client_id === player.getClientID()) {
             bubble.classList.add("own");
@@ -279,6 +287,13 @@ socket.on("chat_message", (data) => {
     chatMessages.appendChild(bubble);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 });
+
+function sendServerMessage(text, bubble) {
+    bubble.classList.add("server");
+    bubble.textContent = text;
+    chatMessages.appendChild(bubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 
 
 
@@ -296,17 +311,8 @@ function setupCode() {
     });
 }
 
-// sync the code givers UI when updating.
-function syncCodeGiverUI() {
-    if (!game.isHost(player.getClientID())) return;
-
-    const codeGiverDiv = document.getElementById("code-giver-div");
-    const codeConfirmButton = document.getElementById("code-confirm-button");
-    const codeHolder = document.getElementById("code-holder");
-
-    const code = game.getCode();
-    if(code) {
-      Array.from(codePegs).forEach((peg, index) => {
+function buildCode(code) {
+    Array.from(codePegs).forEach((peg, index) => {
         if ((code[index]) == -1) {
             peg.innerHTML = `<img src="../static/assets/img/peg_hole.png" alt="peg_hole">`;
             peg.classList.remove("filled");
@@ -317,6 +323,15 @@ function syncCodeGiverUI() {
             peg.appendChild(new_peg);
         }
       });
+
+}
+
+// sync the code givers UI when updating.
+function syncCodeGiverUI() {
+    if (!game.isCodeGiver(player.getClientID())) return;
+    const code = game.getCode();
+    if(code) {
+      buildCode(code);
     }
 
 
@@ -369,7 +384,7 @@ function isTurn() {
 
 function syncSubmitButtonUI() {
     const submitButton = document.getElementById("submit-button");
-    if (game.getCode()) { 
+    if (game.getCodeIsSet()) {  
       submitButton.style.display = "flex";
     }
 
@@ -424,47 +439,131 @@ function renderBoard() {
 // Sockets
 
 socket.on("update_game", (state) => {
+    console.log("update_game received:", state);
     if (state.board !== undefined) game.setBoard(state.board);
     if (state.keyBoard !== undefined) game.setKeyBoard(state.keyBoard);
     if (state.code !== undefined) game.setCode(state.code);
     if (state.current_row !== undefined) game.setCurrentRow(state.current_row);
     if (state.codeTurn !== undefined) game.setCodeTurn(state.codeTurn);
+    if (state.gameOver !== undefined) game.setGameOver(state.gameOver);
+    if (state.winner !== undefined) game.setWinner(state.winner);
+    if (state.codeIsSet !== undefined) game.setCodeIsSet(state.codeIsSet);
 
     renderBoard();
     updateCurrentRowUI();
     syncCodeGiverUI();
     syncSubmitButtonUI();
+    syncGameOverUI(); 
 });
+
+function syncGameOverUI() {
+    if (!game.getGameOver()) return;
+    codeGiverDiv.style.visibility = "visible";
+    codeHideButton.style.visibility = "hidden";
+    buildCode(game.getCode());
+
+    freezeBoard();
+
+    if (!document.querySelector(".game-over-banner")) {
+       if(game.isHost(player.client_id)) {
+            showGameOverBanner();
+       }
+    }
+}
 
 socket.on("action_rejected", (data) => {
     const bubble = document.createElement("div");
     bubble.classList.add("chat-message", "server");
-    bubble.textContent = data.reason;
-    chatMessages.appendChild(bubble);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    sendServerMessage(data.reason, bubble);
 });
 
 socket.on("game_over", (data) => {
+    game.setCode(data.code); 
+    const iAmGuesser = !game.isCodeGiver(player.getClientID());
+    const iWon = (data.winner === "guesser" && iAmGuesser) ||
+                 (data.winner === "code_giver" && !iAmGuesser);
+
+    freezeBoard();
+    renderBoard(); 
+    syncGameOverUI();
+    let message = "";
+    if (iAmGuesser) {
+        message = iWon ? "You Cracked the Code!" : "You failed to crack the code in time.";
+    } else {
+        message = iWon ? "The Code Guesser failed to crack your code!" : "The Code Guesser cracked the code.";
+    }
+        
+    const bubble = document.createElement("div");
+    bubble.classList.add("chat-message", "server");
+
+    sendServerMessage(message, bubble);
+});
+
+function freezeBoard() {
+    document.getElementById("submit-button").style.display = "none";
+
+    Array.from(all_pegs).forEach(peg => peg.style.pointerEvents = "none");
+    Array.from(all_keyholes).forEach(key => key.style.pointerEvents = "none");
+}
+
+function showGameOverBanner() {
+    const banner = document.createElement("div");
+    const turnControls = document.getElementById("turn-controls");
+    banner.className = "game-over-banner";
+
+    banner.innerHTML = `
+        <button id="play-again-button">Play again</button>
+    `;
+    turnControls.appendChild(banner);
+
+    document.getElementById("play-again-button").addEventListener("click", () => {
+        socket.emit("play_again", {
+                room: game.getRoom(),
+                client_id: player.getClientID()
+    });
+    });
+}
+
+socket.on("return_to_room", (data) => {
+    window.location.href = data.url;
+});
+
+socket.on("player_left", (data) => {
+    const bubble = document.createElement("div");
+    bubble.classList.add("chat-message", "server");
+    sendServerMessage("Player has left the game",bubble);
+    const banner = document.createElement("div");
+    const turnControls = document.getElementById("turn-controls");
+    banner.className = "leave-game-banner";
+
+    banner.innerHTML = `
+        <button id="leave-game-button">Leave Game</button>
+    `;
+    turnControls.appendChild(banner);
+
+    document.getElementById("leave-game-banner").addEventListener("click", () => {
+        window.location.href = "/";
+    });
 
 });
 
 
 // Kinda main ig.
 // Create player object.
-let isClue = getClientId() == game_data.host;
+let isClue = getClientId() == game_data.code_giver;
 const player = new Player(isClue);
 player.setClientID(getClientId());
 
 socket.emit("join_room", { room: game_data.room, client_id: player.getClientID() });
 
-const game = new Game(game_data.host, game_data.room);
+const game = new Game(game_data.host, game_data.room, game_data.code_giver); // pass code_giver through
 
-if (!game.isHost(player.getClientID())) {
+if (!game.isCodeGiver(player.getClientID())) { 
     peg_holder.style.visibility = "visible";
     color_holder.style.display = "flex";
 }
 
-if (game.isHost(player.getClientID())) {
+if (game.isCodeGiver(player.getClientID())) { 
     syncCodeGiverUI();
     setupCode();
 }

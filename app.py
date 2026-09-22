@@ -19,6 +19,7 @@ from collections import Counter
 import random
 from string import ascii_uppercase
 from dotenv import load_dotenv
+from better_profanity import profanity
 import os
 
 app = Flask(__name__)
@@ -26,7 +27,9 @@ load_dotenv()
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app)  
 
-MAX_PLAYERS = 2
+
+MAX_PLAYERS = int(os.getenv("MAX_PLAYERS"))
+DISCONNECT_GRACE_SECONDS = int(os.getenv("DISCONNECT_GRACE_SECONDS"))
 
 rooms = {}
 sid_to_client = {}
@@ -66,32 +69,30 @@ def room(room_code):
     room_code = room_code.strip().upper()
     if room_code not in rooms:
         return redirect("/")
-    return render_template("room.html", data={"code": room_code, 
-                                              "host": rooms[room_code]["host"]})
+    return render_template("room.html", 
+                           data={"code": room_code, 
+                                 "host": rooms[room_code]["host"],
+                                  "started": rooms[room_code].get("started", False)})
 
 @app.route("/game")
 def game():
     room = request.args.get("room", "").strip().upper()
-
     client_id = request.cookies.get("client_id")
-
 
     if not room or not client_id:
         return redirect("/")
-
     if room not in rooms:
         return redirect("/")
-
     if not rooms[room]["started"]:
         return redirect("/")
-
     if client_id not in rooms[room]["players"]:
         return redirect("/")
 
     data = {"room": room,
-                "players": rooms[room]["players"],
-                "host": rooms[room]["host"]}
-    return render_template("game.html", data = data)
+            "players": rooms[room]["players"],
+            "host": rooms[room]["host"],
+            "code_giver": rooms[room].get("code_giver")}
+    return render_template("game.html", data=data)
 
 # Join function
 def _join_room(room, client_id, sid):
@@ -120,8 +121,12 @@ def _join_room(room, client_id, sid):
 
     emit("room_update", {"room": room, "count": len(rooms[room]["players"])}, to=room)
 
-    game_state = rooms[room].get("game_state", {})
-    emit("update_game", game_state, to=sid)
+    game_state = rooms[room].get("game_state")
+    if game_state is not None:
+        code_giver_id = rooms[room].get("code_giver")
+        personalized_state = build_client_game_state(game_state, client_id, code_giver_id)
+        emit("update_game", personalized_state, to=sid)
+        
     return True, None
 
 
@@ -159,11 +164,19 @@ def handle_create_room(data):
     ok, err = _join_room(room, client_id, request.sid)
     if not ok:
         emit("join_failed", {"error": err}, to=request.sid)
+        print("joining room failed")
         return
-
     emit("room_created",
          {"room": room, "url": url_for("room", room_code=room, _external=True)},
          to=request.sid)
+
+@socketio.on("leave_room")
+def handle_leave_room(data):
+    client_id = (data.get("client_id") or "").strip()
+    room = data.get("room")
+    sid = request.sid
+    _leave_room(room, sid)
+
 
 
 # Join room event happens
@@ -190,19 +203,21 @@ def handle_join_room(data):
 def create_default_game_state():
     return {
         "board": [[-1] * 4 for _ in range(10)],
-        "keyBoard": [[-1]*4 for _ in range(10)],
+        "keyBoard": [[-1] * 4 for _ in range(10)],
         "code": None,
         "current_row": -1,
-        "codeTurn": True
+        "codeTurn": True,
+        "gameOver": False,
+        "winner": None,
+        "codeIsSet": False
     }
 
-
-# Start room button clicked 
 @socketio.on("start_room")
 def start_game(data):
     room = (data.get("room") or "").strip().upper()
     client_id = (data.get("client_id") or "").strip()
-    print("start game clicked")
+    host_is_code_giver = data.get("host_is_code_giver", True)
+
     if room not in rooms:
         emit("start_failed", {"error": "Room not found."}, to=request.sid)
         return
@@ -215,11 +230,34 @@ def start_game(data):
         emit("start_failed", {"error": "Need 2 players"}, to=request.sid)
         return
 
+    host_id = rooms[room]["host"]
+
+    if host_is_code_giver:
+        code_giver_id = host_id
+    else:
+        # the other player becomes code giver
+        code_giver_id = next(pid for pid in rooms[room]["players"] if pid != host_id)
+
     rooms[room]["started"] = True
+    rooms[room]["code_giver"] = code_giver_id
     rooms[room]["game_state"] = create_default_game_state()
 
-    emit("game_started", {"room": room}, to=room)
+    emit("game_started", {"room": room, "code_giver": code_giver_id}, to=room)
 
+def build_client_game_state(game_state, client_id, code_giver_id):
+    state = dict(game_state)
+    state["codeIsSet"] = game_state.get("code") is not None
+    if client_id != code_giver_id and not game_state.get("gameOver"):
+        state["code"] = None
+    return state
+
+def broadcast_game_state(room):
+    game_state = rooms[room]["game_state"]
+    code_giver_id = rooms[room].get("code_giver")
+
+    for client_id, sid in rooms[room]["players"].items():
+        personalized_state = build_client_game_state(game_state, client_id, code_giver_id)
+        socketio.emit("update_game", personalized_state, to=sid)
     
 @socketio.on("submit_guess")
 def handle_submit_guess(data):
@@ -227,9 +265,14 @@ def handle_submit_guess(data):
     if room is None or room not in rooms:
         return
 
+    client_id = data.get("client_id")
+    if client_id == rooms[room].get("code_giver"):
+        emit("action_rejected", {"reason": "The code giver can't submit guesses."}, to=request.sid)
+        return
+
     game_state = rooms[room].setdefault("game_state", create_default_game_state())
     current_row = game_state["current_row"]
-    guess = data.get("guess")  
+    guess = data.get("guess")
 
     if guess is None:
         emit("action_rejected", {"reason": "Guess is incomplete."}, to=request.sid)
@@ -239,11 +282,14 @@ def handle_submit_guess(data):
         emit("action_rejected", {"reason": "Not your turn to guess."}, to=request.sid)
         return
 
+    if game_state.get("gameOver"):
+        emit("action_rejected", {"reason": "The game has already ended."}, to=request.sid)
+        return
+
     game_state["board"][current_row] = guess
     game_state["codeTurn"] = True
 
-    emit("update_game", game_state, to=room)
-
+    broadcast_game_state(room)
 
 @socketio.on("submit_code")
 def handle_submit_code(data):
@@ -253,7 +299,7 @@ def handle_submit_code(data):
 
     client_id = data.get("client_id")
     code = data.get("code")
-    if client_id != rooms[room].get("host"):
+    if client_id != rooms[room].get("code_giver"):
         emit("action_rejected", {"reason": "Only the code giver can set the code."}, to=request.sid)
         return
 
@@ -267,11 +313,17 @@ def handle_submit_code(data):
         emit("action_rejected", {"reason": "Code has already been set."}, to=request.sid)
         return
 
+    if game_state.get("gameOver"):
+        emit("action_rejected", {"reason": "The game has already ended."}, to=request.sid)
+        return
+
     game_state["code"] = code
     game_state["current_row"] = 9
     game_state["codeTurn"] = False
 
-    emit("update_game", game_state, to=room)
+    broadcast_game_state(room)
+
+
 
 @socketio.on("submit_feedback")
 def handle_submit_feedback(data):
@@ -279,7 +331,21 @@ def handle_submit_feedback(data):
     if room is None or room not in rooms:
         return
 
+    client_id = data.get("client_id")
+    if client_id != rooms[room].get("code_giver"):
+        emit("action_rejected", {"reason": "Only the code giver can submit feedback."}, to=request.sid)
+        return
+
     game_state = rooms[room].setdefault("game_state", create_default_game_state())
+
+    if not game_state.get("codeTurn"):
+        emit("action_rejected", {"reason": "Not your turn to give feedback."}, to=request.sid)
+        return
+
+    if game_state.get("gameOver"):
+        emit("action_rejected", {"reason": "The game has already ended."}, to=request.sid)
+        return
+    
     current_row = game_state["current_row"]
     secret_code = game_state.get("code")
     guess = game_state["board"][current_row]
@@ -294,16 +360,28 @@ def handle_submit_feedback(data):
 
 
     game_state["keyBoard"][current_row] = submitted_key_row
-    game_state["current_row"] -= 1 
+    game_state["current_row"] -= 1
     game_state["codeTurn"] = False
 
-    if (correct_red == 4):
-        emit("update_game", game_state, to=room)
-        send_server_message(room, "Code Guesser won the game.")
-        emit("game_over", to=room)
+    winner = None
+    if correct_red == 4:
+        winner = "guesser"
+    elif game_state["current_row"] < 0:
+        winner = "code_giver"
+
+    if winner is not None:
+        game_state["gameOver"] = True
+        game_state["winner"] = winner
+        game_state["current_row"] = -1
+        broadcast_game_state(room)
+        emit("game_over", {"winner": winner, "code": secret_code}, to=room)
+
+        if winner == "guesser":
+            send_server_message(room, "The code was cracked!")
+        else:
+            send_server_message(room, "Out of guesses — the code giver wins!")
         return
-    
-    emit("update_game", game_state, to=room)
+    broadcast_game_state(room)
 
 
 @socketio.on("chat_message")
@@ -315,7 +393,7 @@ def handle_chat_message(data):
     if not room or room not in rooms or not text:
         return
 
-    text = text[:200]  
+    text = profanity.censor(text[:200])
     emit("chat_message", {"client_id": client_id, "text": text}, to=room)
 
 
@@ -323,7 +401,81 @@ def send_server_message(room, text):
     """Call this from other handlers (e.g. game_started, opponent_disconnected)."""
     emit("chat_message", {"client_id": None, "text": text}, to=room)
 
+@socketio.on("play_again")
+def play_again(data):
+    room = (data.get("room") or "").strip().upper()
+    client_id = (data.get("client_id") or "").strip()
 
+    if room not in rooms:
+        emit("play_again_failed", {"error": "Room not found."}, to=request.sid)
+        return
+
+    if client_id != rooms[room].get("host"):
+        emit("play_again_failed", {"error": "Only the host can start a rematch."}, to=request.sid)
+        return
+
+    rooms[room]["started"] = False 
+
+    emit("return_to_room", {"url": url_for("room", room_code=room, _external=True)}, to=room)
+
+def _finalize_disconnect(room, sid, client_id):
+    if room not in rooms:
+        return
+
+    players = rooms[room]["players"]
+
+    # Only remove them if this sid is STILL on file — if they reconnected
+    # in the meantime (e.g. quick back-and-forth), a new sid replaced it already.
+    if players.get(client_id) != sid:
+        return
+
+    del players[client_id]
+    sid_to_room.pop(sid, None)
+    sid_to_client.pop(sid, None)
+
+    socketio.emit("room_update", {"room": room, "count": len(players)}, to=room)
+    socketio.emit("player_left", {"client_id": client_id}, to=room)
+
+    if len(players) == 0:
+        del rooms[room]
+
+
+def _delayed_finalize(room, sid, client_id):
+    socketio.sleep(DISCONNECT_GRACE_SECONDS)
+    _finalize_disconnect(room, sid, client_id)
+
+
+@socketio.on("disconnect")
+def handle_disconnect():
+    sid = request.sid
+    room = sid_to_room.get(sid)
+    client_id = sid_to_client.get(sid)
+
+    if room and client_id:
+        socketio.start_background_task(_delayed_finalize, room, sid, client_id)
+
+
+@socketio.on("room_back_button")
+def room_back_button(data):
+    sid = request.sid
+    room = sid_to_room.get(sid)
+
+    if room is None or room not in rooms:
+        return
+
+    client_id = sid_to_client.get(sid)
+
+    if rooms[room].get("host") == client_id:
+        remaining = [pid for pid in rooms[room]["players"] if pid != client_id]
+        if remaining:
+            rooms[room]["host"] = remaining[0]
+            socketio.emit("host_changed", {"new_host": remaining[0]}, to=room)
+        _leave_room(room, sid)
+        return {"url": "/"}
+
+
+    _leave_room(room, sid)
+    return {"url": "/"}
 
 
 # main 

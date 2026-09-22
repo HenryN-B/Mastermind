@@ -14,14 +14,19 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 export class Game {
-    constructor(hostID, room) {
+    constructor(hostID, room, codeGiverID) {
         this.board = Array.from({ length: 10 }, () => new Array(4).fill(-1));
         this.keyBoard = Array.from({ length: 10 }, () => new Array(4).fill(-1));
         this.currentRow = -1;
-        this.host = hostID
+        this.host = hostID;
+        this.codeGiver = codeGiverID;
         this.code = null;
         this.room = room;
         this.codeTurn = true;
+        this.gameOver = false;
+        this.winner = null;
+        this.codeIsSet = false;
+
     }
 
     /**
@@ -99,5 +104,41 @@ export class Game {
 
     setCodeTurn(turn) {
         this.codeTurn = turn;
+    }
+
+    /**
+     * Checks to see if the input clientId matches the code giver.
+     * @param {String} clientId a clientId
+     * @returns {Boolean}
+     */
+    isCodeGiver(clientId) {
+        return clientId === this.codeGiver;
+    }
+
+    getCodeGiver() {
+        return this.codeGiver;
+    }
+    setGameOver(isOver) { 
+        this.gameOver = isOver; 
+    }
+
+    getGameOver() { 
+        return this.gameOver; 
+    }
+
+    setWinner(winner) { 
+        this.winner = winner; 
+    }
+
+    getWinner() { 
+        return this.winner; 
+    }
+
+    setCodeIsSet(value) { 
+        this.codeIsSet = value; 
+    }
+
+    getCodeIsSet() { 
+        return this.codeIsSet; 
     }
 }

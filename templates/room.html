@@ -3,17 +3,25 @@
 
 <div class="table">
     <div class="game-box">
+
+        <button class="back-button" id="back-button" title="Leave room">&larr;</button>
         <h1 class="title">Mastermind</h1>
         <p class="tagline" id="status-text">Waiting for players&hellip;</p>
 
         <div class="room-code-plaque">
             <span class="room-code-value" id="room-code-value">{{ data.code }}</span>
-            {# <button class="copy-button" id="copy-button" type="button" title="Copy room code">Copy</button> #}
+            <button class="copy-button" id="copy-button" type="button" title="Copy room code" style="display: none;">Copy</button>
         </div>
 
         <p class="player-status">
-            <span id="player-count">?</span> of 2 players here
+            <span id="player-count">?</span> of 2 players
         </p>
+        <div class = "extra-buttons">
+            <label class="role-toggle" for="code-giver-checkbox" style="display: none;" id ="role-toggle">
+                <input type="checkbox" id="code-giver-checkbox" name="code-giver" checked>
+                <span>Play as code giver</span>
+            </label>
+        </div>
 
         <button class="tile-button primary" id="start" type="button" style="display: none;" disabled>
             Start game

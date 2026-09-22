@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  <your name>
+ * Copyright (C) 2026  Henry Norton-Bower
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,6 +52,7 @@ body {
     border-image-slice: 10;
     border-image-source: url("../assets/img/wood.png");
     box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    position: relative;
 }
 
 .title {
@@ -137,4 +138,55 @@ body {
 .tile-button:disabled {
     background: rgba(42, 27, 7, 0.35);
     cursor: not-allowed;
+}
+
+.role-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding: 10px 16px;
+    border: 2px solid var(--wood-mid);
+    border-radius: 6px;
+    background: #fdfaf3;
+    color: var(--ink);
+    font-size: 0.95rem;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.role-toggle:hover {
+    filter: brightness(0.98);
+}
+
+.role-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--peg-red);
+    cursor: pointer;
+}
+
+.back-button {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    line-height: 1;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--wood-mid);
+    cursor: pointer;
+}
+
+.back-button:hover {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--ink);
 }

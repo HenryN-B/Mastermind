@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  <your name>
+ * Copyright (C) 2026  Henry Norton-Bower
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -95,25 +95,28 @@ html, body {
 
 
 .feedback-pegs-holder {
-  width: 100%;
+  width: 80%;
   height: auto;
   justify-self: left;
+  align-items: center;
   display: flex;
   justify-content: space-evenly;
   flex-direction: column;
+  background-image: url("../assets/img/wood.png");
+  border-radius: 25px;
+  box-shadow: inset 0 3px 6px rgba(0,0,0,0.5); 
 }
 
 .feedback-pegs {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 80%;
-    height: 64px;
-    border: solid 5px;
-    border-image-slice: 5;
-    border-image-source: url("../assets/img/wood.png");
-    background-color: #1a3a1c;
-    box-shadow: inset 0 3px 6px rgba(0,0,0,0.5);
+    width: 60%;
+    height: clamp(20px, 3.5vw, 64px);
+    background-color: var(--wood-dark);
+    box-shadow: inset 0 3px 6px rgba(0,0,0,0.5); 
+    border-radius: 50px;
+    margin: 0.5vw 0;
 }
 
 .feedback-pegs img{
@@ -390,7 +393,7 @@ body.custom-cursor {
 .turn-controls {
     flex: 0 0 auto;
     display: flex;
-    justify-content: center;
+    justify-content: space-evenly;
     padding: 12px 0 4px;
 }
 
@@ -436,11 +439,15 @@ body.custom-cursor {
     gap: 4px;
 }
 
+
 .chat-message {
     padding: 4px 8px;
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.08);
-    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .chat-message.own {
@@ -475,4 +482,27 @@ body.custom-cursor {
     background: #2a1b07;
     color: white;
     cursor: pointer;
+}
+
+#play-again-button {
+  padding: 10px 28px;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+  letter-spacing: 1px;
+  cursor: pointer;
+  background: #2a1b07;
+  color: white;
+
+}
+
+#leave-game-button {
+  padding: 10px 28px;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+  letter-spacing: 1px;
+  cursor: pointer;
+  background: #2a1b07;
+  color: white;
 }

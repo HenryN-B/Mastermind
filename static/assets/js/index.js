@@ -1,4 +1,4 @@
-// Copyright (C) 2026  Henry Norton-Bower
+// Copyright (C) 2026 Henry Norton-Bower
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,6 +16,13 @@
 import { getClientId } from "./helper.js";
 
 const socket = io();
+
+window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+
 const clientId = getClientId();
 
 document.cookie = `client_id=${clientId}; path=/`;
@@ -36,6 +43,7 @@ function join_button_event() {
 }
 
 function create_button_event() {
+    console.log("Creating room");
     socket.emit("create_room", { client_id: clientId });
 }
 
