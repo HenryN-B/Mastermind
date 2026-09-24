@@ -1,11 +1,14 @@
 bidict==0.23.1
 blinker==1.9.0
+better_profanity==0.7.0
 cachelib==0.13.0
 click==8.3.1
 dotenv==0.9.9
+eventlet==0.41.2
 Flask==3.1.2
 Flask-Caching==2.3.1
 Flask-SocketIO==5.6.0
+gunicorn==23.0.0
 h11==0.16.0
 itsdangerous==2.2.0
 Jinja2==3.1.6

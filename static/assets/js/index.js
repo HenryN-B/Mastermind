@@ -15,7 +15,7 @@
 
 import { getClientId } from "./helper.js";
 
-const socket = io();
+const socket = io({ path: "/mastermind/socket.io/" });
 
 window.addEventListener("pageshow", (event) => {
     if (event.persisted) {
@@ -43,7 +43,6 @@ function join_button_event() {
 }
 
 function create_button_event() {
-    console.log("Creating room");
     socket.emit("create_room", { client_id: clientId });
 }
 

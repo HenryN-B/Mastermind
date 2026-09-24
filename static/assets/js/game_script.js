@@ -17,11 +17,18 @@ import { Player } from "./player.js";
 import { Game } from "./game.js";
 import { getClientId } from "./helper.js";
 
-const socket = io();
+const socket = io({ path: "/mastermind/socket.io/" });
 
 window.addEventListener("pageshow", (event) => {
     if (event.persisted) {
         window.location.reload();
+    }
+});
+
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && !socket.connected) {
+        socket.connect();
+        
     }
 });
 
@@ -31,7 +38,7 @@ window.addEventListener("pageshow", (event) => {
 const colors = new Array(8);
 for (let i = 0; i<8; i++) {
   colors[i] =  new Image();
-  colors[i].src = `../static/assets/img/color-${i}.png`;
+  colors[i].src = `${window.STATIC_BASE}assets/img/color-${i}.png`;
   colors[i].alt = "peg img";
 }
 
@@ -39,13 +46,13 @@ for (let i = 0; i<8; i++) {
 const feedback_pegs = new Array(2);
 for (let i = 0; i < 2; i++) {
   feedback_pegs[i] = new Image();
-  feedback_pegs[i].src = `../static/assets/img/feedback-${i}.png`;
+  feedback_pegs[i].src = `${window.STATIC_BASE}assets/img/feedback-${i}.png`;
   feedback_pegs[i].alt = "peg img";
 }
 
 // Preload peg hole
 const pegHole = new Image();
-pegHole.src = `../static/assets/img/peg_hole.png`;
+pegHole.src = `${window.STATIC_BASE}assets/img/peg_hole.png`;
 pegHole.alt = "peg img";
 
 // find elements that need event listeners.
@@ -314,7 +321,8 @@ function setupCode() {
 function buildCode(code) {
     Array.from(codePegs).forEach((peg, index) => {
         if ((code[index]) == -1) {
-            peg.innerHTML = `<img src="../static/assets/img/peg_hole.png" alt="peg_hole">`;
+            // URL FIX HERE 
+            peg.innerHTML = `<img src="${window.STATIC_BASE}assets/img/peg_hole.png" alt="peg_hole">`; 
             peg.classList.remove("filled");
         } else {
             const new_peg = colors[code[index]].cloneNode(true);
@@ -408,7 +416,8 @@ function renderBoard() {
             const peg = document.getElementById(`peg-r${rowIndex}-c${colIndex}`);
 
             if (color === -1) {
-                peg.innerHTML = `<img src="../static/assets/img/peg_hole.png" alt="peg_hole">`;
+                // URL FIX HERE
+                peg.innerHTML = `<img src="${window.STATIC_BASE}assets/img/peg_hole.png" alt="peg_hole">`;
                 peg.classList.remove("filled");
             } else {
                 const new_peg = colors[color].cloneNode(true);
@@ -424,7 +433,8 @@ function renderBoard() {
             const key = document.getElementById(`key-r${rowIndex}-n${numIndex}`);
 
             if (feedback === -1) {
-                key.innerHTML = `<img src="../static/assets/img/peg_hole.png" alt="peg_hole">`;
+                // URL FIX HERE
+                key.innerHTML = `<img src="${window.STATIC_BASE}assets/img/peg_hole.png" alt="peg_hole">`;
                 key.classList.remove("filled");
             } else {
                 const new_peg = feedback_pegs[feedback].cloneNode(true);
@@ -439,7 +449,6 @@ function renderBoard() {
 // Sockets
 
 socket.on("update_game", (state) => {
-    console.log("update_game received:", state);
     if (state.board !== undefined) game.setBoard(state.board);
     if (state.keyBoard !== undefined) game.setKeyBoard(state.keyBoard);
     if (state.code !== undefined) game.setCode(state.code);
@@ -542,7 +551,7 @@ socket.on("player_left", (data) => {
     turnControls.appendChild(banner);
 
     document.getElementById("leave-game-banner").addEventListener("click", () => {
-        window.location.href = "/";
+        window.location.href = "/mastermind/";
     });
 
 });
@@ -554,7 +563,9 @@ let isClue = getClientId() == game_data.code_giver;
 const player = new Player(isClue);
 player.setClientID(getClientId());
 
-socket.emit("join_room", { room: game_data.room, client_id: player.getClientID() });
+socket.on("connect", () => {
+    socket.emit("join_room", { room: game_data.room, client_id: player.getClientID() });
+});
 
 const game = new Game(game_data.host, game_data.room, game_data.code_giver); // pass code_giver through
 

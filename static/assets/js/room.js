@@ -16,7 +16,7 @@
 import { getClientId } from "./helper.js";
 
 if (game_data.started) {
-    window.location.replace(`/game?room=${game_data.code}`);
+    window.location.replace(`/mastermind/game?room=${game_data.code}`);
 }
 
 window.addEventListener("pageshow", (event) => {
@@ -25,7 +25,7 @@ window.addEventListener("pageshow", (event) => {
     }
 });
 
-const socket = io();
+const socket = io({ path: "/mastermind/socket.io/" });
 const clientId = getClientId();
 const roomCode = game_data.code;
 const isHost = clientId == game_data.host;
@@ -85,7 +85,7 @@ socket.emit("join_room", { room: roomCode, client_id: clientId });
 
 socket.on("join_failed", (data) => {
     alert(data.error);
-    window.location.href = "/";
+    window.location.href = "/mastermind/";
 });
 
 socket.on("room_update", (data) => {
@@ -95,22 +95,20 @@ socket.on("room_update", (data) => {
 socket.on("start_failed", (data) => {
     alert(data.error);
     if (data.error != "Need 2 players") {
-        window.location.href = "/";
+        window.location.href = "/mastermind/";
     }
 });
 
 socket.on("game_started", (data) => {
-    window.location.href = `/game?room=${data.room}`;
+    window.location.href = `/mastermind/game?room=${data.room}`;
 });
 
 socket.on("host_changed", (data) => {
-    console.log("here")
     window.location.reload();
 });
 
 
 backButton.addEventListener("click", () => {
-    console.log("here")
 socket.emit("room_back_button", { room: roomCode, client_id: clientId }, (response) => {
     if (response && response.url) {
         window.location.href = response.url;

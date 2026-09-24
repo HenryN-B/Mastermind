@@ -13,6 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, render_template, url_for, request, redirect, session
 from flask_socketio import SocketIO, join_room, leave_room, emit
 from collections import Counter
@@ -22,10 +25,10 @@ from dotenv import load_dotenv
 from better_profanity import profanity
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/mastermind/static')
 load_dotenv()
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
-socketio = SocketIO(app)  
+socketio = SocketIO(app, path="/mastermind/socket.io", ping_interval=25, ping_timeout=60)
 
 
 MAX_PLAYERS = int(os.getenv("MAX_PLAYERS"))
@@ -60,33 +63,33 @@ def count_submitted_feedback(key_row):
     white = key_row.count(1)
     return red, white
 
-@app.route("/")
+@app.route("/mastermind/")
 def index():
     return render_template("index.html")
 
-@app.route("/room/<room_code>")
+@app.route("/mastermind/room/<room_code>")
 def room(room_code):
     room_code = room_code.strip().upper()
     if room_code not in rooms:
-        return redirect("/")
+        return redirect("/mastermind/")
     return render_template("room.html", 
                            data={"code": room_code, 
                                  "host": rooms[room_code]["host"],
                                   "started": rooms[room_code].get("started", False)})
 
-@app.route("/game")
+@app.route("/mastermind/game")
 def game():
     room = request.args.get("room", "").strip().upper()
     client_id = request.cookies.get("client_id")
 
     if not room or not client_id:
-        return redirect("/")
+        return redirect("/mastermind/")
     if room not in rooms:
-        return redirect("/")
+        return redirect("/mastermind/")
     if not rooms[room]["started"]:
-        return redirect("/")
+        return redirect("/mastermind/")
     if client_id not in rooms[room]["players"]:
-        return redirect("/")
+        return redirect("/mastermind/")
 
     data = {"room": room,
             "players": rooms[room]["players"],
@@ -471,11 +474,11 @@ def room_back_button(data):
             rooms[room]["host"] = remaining[0]
             socketio.emit("host_changed", {"new_host": remaining[0]}, to=room)
         _leave_room(room, sid)
-        return {"url": "/"}
+        return {"url": "/mastermind/"}
 
 
     _leave_room(room, sid)
-    return {"url": "/"}
+    return {"url": "/mastermind/"}
 
 
 # main 
